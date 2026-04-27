@@ -1,5 +1,12 @@
 package com.kweaver.dip.ui.navigation
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.ui.graphics.vector.ImageVector
+
 sealed class Route(val route: String) {
     data object Login : Route("login")
     data object Home : Route("home")
@@ -39,12 +46,12 @@ sealed class Route(val route: String) {
 data class BottomNavItem(
     val route: String,
     val label: String,
-    val icon: androidx.compose.material.icons.Icons
+    val icon: ImageVector
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem(Route.Home.route, "Chat", androidx.compose.material.icons.Icons.Default.Chat),
-    BottomNavItem(Route.DigitalHumanList.route, "Agents", androidx.compose.material.icons.Icons.Default.SmartToy),
-    BottomNavItem(Route.SessionList.route, "History", androidx.compose.material.icons.Icons.Default.History),
-    BottomNavItem(Route.PlanList.route, "Plans", androidx.compose.material.icons.Icons.Default.Schedule)
+    BottomNavItem(Route.Home.route, "Chat", Icons.AutoMirrored.Filled.Chat),
+    BottomNavItem(Route.DigitalHumanList.route, "Agents", Icons.Filled.SmartToy),
+    BottomNavItem(Route.SessionList.route, "History", Icons.Filled.History),
+    BottomNavItem(Route.PlanList.route, "Plans", Icons.Filled.Schedule)
 )

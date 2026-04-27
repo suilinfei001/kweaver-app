@@ -5,6 +5,7 @@ import com.kweaver.dip.data.api.SseClient
 import com.kweaver.dip.data.local.datastore.TokenDataStore
 import com.kweaver.dip.data.model.*
 import kotlinx.coroutines.flow.Flow
+import okhttp3.MediaType.Companion.toMediaType
 import javax.inject.Inject
 
 class ChatRepository @Inject constructor(
@@ -32,7 +33,7 @@ class ChatRepository @Inject constructor(
 
     suspend fun uploadFile(sessionKey: String, fileName: String, fileBytes: ByteArray): Result<ChatUploadResult> = try {
         val requestBody = okhttp3.RequestBody.create(
-            okhttp3.MediaType.parse("application/octet-stream"), fileBytes
+            "application/octet-stream".toMediaType(), fileBytes
         )
         val multipartBody = okhttp3.MultipartBody.Part.createFormData("file", fileName, requestBody)
         Result.success(api.uploadChatFile(sessionKey, multipartBody))

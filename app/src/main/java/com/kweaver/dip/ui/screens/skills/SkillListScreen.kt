@@ -26,9 +26,9 @@ fun SkillListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    val context = androidx.compose.ui.platform.LocalContext.current
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
-            val context = androidx.compose.ui.platform.LocalContext.current
             val inputStream = context.contentResolver.openInputStream(it)
             val bytes = inputStream?.readBytes()
             val fileName = it.lastPathSegment ?: "skill.zip"

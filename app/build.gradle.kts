@@ -8,16 +8,16 @@ plugins {
 
 android {
     namespace = "com.kweaver.dip"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.kweaver.dip"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.kweaver.dip.runner.HiltTestRunner"
     }
 
     buildTypes {
@@ -37,6 +37,11 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+        freeCompilerArgs += "-Xjvm-default=all"
+    }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
     }
 
     buildFeatures {
@@ -65,6 +70,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
+    implementation(libs.gson)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
@@ -77,4 +83,15 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.kotlinx.coroutines.android)
+
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.androidx.test.runner)
+    kspAndroidTest(libs.hilt.compiler)
+
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.androidx.test.ext.junit)
+    testImplementation(libs.arch.core.testing)
 }

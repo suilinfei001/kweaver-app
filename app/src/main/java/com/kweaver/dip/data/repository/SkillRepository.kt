@@ -3,6 +3,7 @@ package com.kweaver.dip.data.repository
 import com.kweaver.dip.data.api.DipStudioApi
 import com.kweaver.dip.data.local.datastore.TokenDataStore
 import com.kweaver.dip.data.model.*
+import okhttp3.MediaType.Companion.toMediaType
 import javax.inject.Inject
 
 class SkillRepository @Inject constructor(
@@ -30,7 +31,7 @@ class SkillRepository @Inject constructor(
 
     suspend fun installSkill(fileName: String, fileBytes: ByteArray): Result<InstallSkillResult> = try {
         val requestBody = okhttp3.RequestBody.create(
-            okhttp3.MediaType.parse("application/zip"), fileBytes
+            "application/zip".toMediaType(), fileBytes
         )
         val multipartBody = okhttp3.MultipartBody.Part.createFormData("file", fileName, requestBody)
         Result.success(api.installSkill(multipartBody))

@@ -9,11 +9,10 @@ import retrofit2.http.POST
 
 interface DipHubApi {
 
-    @FormUrlEncoded
-    @POST("api/dip-hub/v1/login")
+    @GET("api/dip-hub/v1/login")
     suspend fun login(
-        @Field("username") username: String,
-        @Field("password") password: String
+        @retrofit2.http.Query("username") username: String,
+        @retrofit2.http.Query("password") password: String
     ): Response<ResponseBody>
 
     @GET("api/dip-hub/v1/refresh-token")

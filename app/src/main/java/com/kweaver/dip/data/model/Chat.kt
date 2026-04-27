@@ -1,5 +1,7 @@
 package com.kweaver.dip.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class ChatMessage(
     val id: String,
     val role: MessageRole,

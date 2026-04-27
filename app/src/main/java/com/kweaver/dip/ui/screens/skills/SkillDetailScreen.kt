@@ -92,7 +92,7 @@ private fun FilesTab(tree: List<com.kweaver.dip.data.model.SkillTreeItem>) {
 
 @Composable
 private fun SkillTreeItemRow(item: com.kweaver.dip.data.model.SkillTreeItem, depth: Int) {
-    Row(modifier = Modifier.padding(start = (depth * 24).dp, vertical = 4.dp)) {
+    Row(modifier = Modifier.padding(start = (depth * 24).dp, top = 4.dp, bottom = 4.dp)) {
         Text(
             if (item.type == "directory") "📁 " else "📄 ",
             style = MaterialTheme.typography.bodyMedium
