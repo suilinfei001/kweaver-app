@@ -20,9 +20,11 @@ class AuthInterceptor @Inject constructor(
             return chain.proceed(originalRequest)
         }
 
+        val cleanToken = token.trim()
+
         val authenticatedRequest = originalRequest.newBuilder()
-            .addHeader("Authorization", "Bearer $token")
-            .addHeader("Token", token)
+            .addHeader("Authorization", "Bearer $cleanToken")
+            .addHeader("Token", cleanToken)
             .build()
 
         return chain.proceed(authenticatedRequest)

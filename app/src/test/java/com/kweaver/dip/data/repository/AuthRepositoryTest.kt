@@ -1,10 +1,8 @@
 package com.kweaver.dip.data.repository
 
-import com.kweaver.dip.data.api.DipHubApi
+import com.kweaver.dip.data.api.OAuth2LoginHelper
 import com.kweaver.dip.data.local.datastore.TokenDataStore
 import kotlinx.coroutines.test.runTest
-import okhttp3.Headers
-import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -14,12 +12,11 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import retrofit2.Response
 
 class AuthRepositoryTest {
 
     @Mock
-    private lateinit var dipHubApi: DipHubApi
+    private lateinit var oAuth2LoginHelper: OAuth2LoginHelper
 
     @Mock
     private lateinit var tokenDataStore: TokenDataStore
@@ -29,15 +26,13 @@ class AuthRepositoryTest {
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        authRepository = AuthRepository(dipHubApi, tokenDataStore)
+        authRepository = AuthRepository(oAuth2LoginHelper, tokenDataStore)
     }
 
     @Test
     fun `login saves server url`() = runTest {
-        whenever(tokenDataStore.getAccessToken()).thenReturn(null)
-        val headers = Headers.headersOf()
-        whenever(dipHubApi.login("admin", "pass"))
-            .thenReturn(Response.success("ok".toResponseBody(), headers))
+        whenever(oAuth2LoginHelper.login("https://example.com", "admin", "pass"))
+            .thenReturn(OAuth2LoginHelper.LoginResult("token123", null))
 
         authRepository.login("https://example.com", "admin", "pass")
 
@@ -46,25 +41,18 @@ class AuthRepositoryTest {
 
     @Test
     fun `login failure returns error`() = runTest {
-        whenever(tokenDataStore.getAccessToken()).thenReturn(null)
-        whenever(dipHubApi.login("admin", "wrong"))
-            .thenReturn(Response.error(401, "Unauthorized".toResponseBody()))
+        whenever(oAuth2LoginHelper.login("https://example.com", "admin", "wrong"))
+            .thenThrow(RuntimeException("Signin POST failed with 401"))
 
         val result = authRepository.login("https://example.com", "admin", "wrong")
 
         assertTrue(result.isFailure)
-        assertTrue(result.exceptionOrNull()?.message?.contains("Login failed") == true)
     }
 
     @Test
-    fun `login with cookie token saves tokens`() = runTest {
-        whenever(tokenDataStore.getAccessToken()).thenReturn(null)
-        val headers = Headers.headersOf(
-            "Set-Cookie", "dip.oauth2_token=abc123; Path=/",
-            "Set-Cookie", "dip.refresh_token=refresh456; Path=/"
-        )
-        whenever(dipHubApi.login("admin", "pass"))
-            .thenReturn(Response.success("".toResponseBody(), headers))
+    fun `login saves tokens and username on success`() = runTest {
+        whenever(oAuth2LoginHelper.login("https://example.com", "admin", "pass"))
+            .thenReturn(OAuth2LoginHelper.LoginResult("abc123", "refresh456"))
 
         val result = authRepository.login("https://example.com", "admin", "pass")
 
@@ -72,6 +60,18 @@ class AuthRepositoryTest {
         assertEquals("abc123", result.getOrNull())
         verify(tokenDataStore).saveTokens("abc123", "refresh456")
         verify(tokenDataStore).saveUsername("admin")
+    }
+
+    @Test
+    fun `login without refresh token`() = runTest {
+        whenever(oAuth2LoginHelper.login("https://example.com", "admin", "pass"))
+            .thenReturn(OAuth2LoginHelper.LoginResult("token_only", null))
+
+        val result = authRepository.login("https://example.com", "admin", "pass")
+
+        assertTrue(result.isSuccess)
+        assertEquals("token_only", result.getOrNull())
+        verify(tokenDataStore).saveTokens("token_only", null)
     }
 
     @Test

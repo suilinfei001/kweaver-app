@@ -1,0 +1,14 @@
+[project]
+name = "kweaver-dip-e2e"
+version = "0.1.0"
+description = "E2E tests for KWeaver DIP Android app"
+requires-python = ">=3.10"
+dependencies = [
+    "Appium-Python-Client>=4.0.0",
+    "pytest>=8.0",
+    "pytest-html>=4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

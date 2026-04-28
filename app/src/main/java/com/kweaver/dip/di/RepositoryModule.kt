@@ -2,6 +2,7 @@ package com.kweaver.dip.di
 
 import com.kweaver.dip.data.api.DipHubApi
 import com.kweaver.dip.data.api.DipStudioApi
+import com.kweaver.dip.data.api.OAuth2LoginHelper
 import com.kweaver.dip.data.api.SseClient
 import com.kweaver.dip.data.local.datastore.TokenDataStore
 import com.kweaver.dip.data.repository.*
@@ -18,9 +19,9 @@ object RepositoryModule {
     @Provides
     @Singleton
     fun provideAuthRepository(
-        dipHubApi: DipHubApi,
+        oAuth2LoginHelper: OAuth2LoginHelper,
         tokenDataStore: TokenDataStore
-    ): AuthRepository = AuthRepository(dipHubApi, tokenDataStore)
+    ): AuthRepository = AuthRepository(oAuth2LoginHelper, tokenDataStore)
 
     @Provides
     @Singleton

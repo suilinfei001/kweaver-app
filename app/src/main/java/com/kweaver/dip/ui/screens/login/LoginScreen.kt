@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -65,7 +67,7 @@ fun LoginScreen(
                 label = { Text("Server URL") },
                 placeholder = { Text("https://192.168.40.110") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "login_server_url" },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Uri,
                     imeAction = ImeAction.Next
@@ -79,7 +81,7 @@ fun LoginScreen(
                 onValueChange = viewModel::updateUsername,
                 label = { Text("Username") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "login_username" },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
                 )
@@ -101,7 +103,7 @@ fun LoginScreen(
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "login_password" },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
@@ -115,7 +117,8 @@ fun LoginScreen(
                 Text(
                     text = uiState.error!!,
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.semantics { contentDescription = "login_error_message" }
                 )
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -123,7 +126,7 @@ fun LoginScreen(
             Button(
                 onClick = viewModel::login,
                 enabled = !uiState.isLoading,
-                modifier = Modifier.fillMaxWidth().height(48.dp)
+                modifier = Modifier.fillMaxWidth().height(48.dp).semantics { contentDescription = "login_sign_in_button" }
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(

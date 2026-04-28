@@ -9,3 +9,10 @@
 .cxx
 local.properties
 /app/build
+
+# E2E test artifacts
+e2e-tests/.venv/
+e2e-tests/**/__pycache__/
+e2e-tests/*.egg-info/
+e2e-tests/.pytest_cache/
+/reference/

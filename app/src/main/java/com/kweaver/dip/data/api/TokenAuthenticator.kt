@@ -75,8 +75,15 @@ class TokenAuthenticator @Inject constructor(
 
     private fun parseAccessToken(body: String?): String? {
         if (body.isNullOrBlank()) return null
-        val gson = com.google.gson.Gson()
-        val map = gson.fromJson(body, Map::class.java) as? Map<*, *> ?: return null
-        return map["access_token"] as? String
+        return try {
+            val jsonElement = com.google.gson.JsonParser.parseString(body)
+            if (jsonElement.isJsonObject) {
+                jsonElement.asJsonObject.get("access_token")?.asString
+            } else {
+                body.trim()
+            }
+        } catch (e: Exception) {
+            body.trim()
+        }
     }
 }
