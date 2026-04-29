@@ -1,5 +1,6 @@
 package com.kweaver.dip.data.repository
 
+import com.kweaver.dip.data.api.BaseUrlInterceptor
 import com.kweaver.dip.data.api.OAuth2LoginHelper
 import com.kweaver.dip.data.local.datastore.TokenDataStore
 import kotlinx.coroutines.test.runTest
@@ -21,12 +22,15 @@ class AuthRepositoryTest {
     @Mock
     private lateinit var tokenDataStore: TokenDataStore
 
+    @Mock
+    private lateinit var baseUrlInterceptor: BaseUrlInterceptor
+
     private lateinit var authRepository: AuthRepository
 
     @Before
     fun setup() {
         MockitoAnnotations.openMocks(this)
-        authRepository = AuthRepository(oAuth2LoginHelper, tokenDataStore)
+        authRepository = AuthRepository(oAuth2LoginHelper, tokenDataStore, baseUrlInterceptor)
     }
 
     @Test
@@ -92,5 +96,15 @@ class AuthRepositoryTest {
     fun `logout clears all data`() = runTest {
         authRepository.logout()
         verify(tokenDataStore).clearAll()
+    }
+
+    @Test
+    fun `login updates base url interceptor`() = runTest {
+        whenever(oAuth2LoginHelper.login("https://example.com", "admin", "pass"))
+            .thenReturn(OAuth2LoginHelper.LoginResult("token123", null))
+
+        authRepository.login("https://example.com", "admin", "pass")
+
+        verify(baseUrlInterceptor).updateBaseUrl("https://example.com")
     }
 }

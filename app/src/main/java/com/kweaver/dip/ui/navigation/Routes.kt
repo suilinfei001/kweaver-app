@@ -5,11 +5,13 @@ import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class Route(val route: String) {
     data object Login : Route("login")
     data object Home : Route("home")
+    data object AppStore : Route("app-store")
     data object Chat : Route("chat/{agentId}?sessionKey={sessionKey}&agentName={agentName}") {
         fun createRoute(agentId: String, sessionKey: String? = null, agentName: String? = null): String {
             val sb = StringBuilder("chat/$agentId")
@@ -52,6 +54,7 @@ data class BottomNavItem(
 val bottomNavItems = listOf(
     BottomNavItem(Route.Home.route, "Chat", Icons.AutoMirrored.Filled.Chat),
     BottomNavItem(Route.DigitalHumanList.route, "Agents", Icons.Filled.SmartToy),
+    BottomNavItem(Route.AppStore.route, "Store", Icons.Filled.Apps),
     BottomNavItem(Route.SessionList.route, "History", Icons.Filled.History),
     BottomNavItem(Route.PlanList.route, "Plans", Icons.Filled.Schedule)
 )

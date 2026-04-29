@@ -1,5 +1,6 @@
 package com.kweaver.dip.di
 
+import com.kweaver.dip.data.api.BaseUrlInterceptor
 import com.kweaver.dip.data.api.DipHubApi
 import com.kweaver.dip.data.api.DipStudioApi
 import com.kweaver.dip.data.api.OAuth2LoginHelper
@@ -20,8 +21,9 @@ object RepositoryModule {
     @Singleton
     fun provideAuthRepository(
         oAuth2LoginHelper: OAuth2LoginHelper,
-        tokenDataStore: TokenDataStore
-    ): AuthRepository = AuthRepository(oAuth2LoginHelper, tokenDataStore)
+        tokenDataStore: TokenDataStore,
+        baseUrlInterceptor: BaseUrlInterceptor
+    ): AuthRepository = AuthRepository(oAuth2LoginHelper, tokenDataStore, baseUrlInterceptor)
 
     @Provides
     @Singleton
@@ -64,4 +66,10 @@ object RepositoryModule {
     fun provideGuideRepository(
         dipStudioApi: DipStudioApi
     ): GuideRepository = GuideRepository(dipStudioApi)
+
+    @Provides
+    @Singleton
+    fun provideAppRepository(
+        dipHubApi: DipHubApi
+    ): AppRepository = AppRepository(dipHubApi)
 }

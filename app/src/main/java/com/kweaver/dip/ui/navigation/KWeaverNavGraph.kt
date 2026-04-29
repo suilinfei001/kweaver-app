@@ -2,6 +2,7 @@ package com.kweaver.dip.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Schedule
@@ -34,6 +35,7 @@ import com.kweaver.dip.ui.screens.sessions.SessionDetailScreen
 import com.kweaver.dip.ui.screens.sessions.SessionListScreen
 import com.kweaver.dip.ui.screens.settings.SettingsScreen
 import com.kweaver.dip.ui.screens.skills.SkillDetailScreen
+import com.kweaver.dip.ui.screens.store.AppStoreScreen
 import com.kweaver.dip.ui.screens.skills.SkillListScreen
 
 @Composable
@@ -50,6 +52,7 @@ fun KWeaverNavGraph() {
     val bottomBarTabs = listOf(
         Triple(Route.Home.route, "Chat", Icons.Default.Chat),
         Triple(Route.DigitalHumanList.route, "Agents", Icons.Default.SmartToy),
+        Triple(Route.AppStore.route, "Store", Icons.Default.Apps),
         Triple(Route.SessionList.route, "History", Icons.Default.History),
         Triple(Route.PlanList.route, "Plans", Icons.Default.Schedule)
     )
@@ -104,6 +107,10 @@ fun KWeaverNavGraph() {
                     },
                     onNavigateToSettings = { navController.navigate(Route.Settings.route) }
                 )
+            }
+
+            composable(Route.AppStore.route) {
+                AppStoreScreen()
             }
 
             composable(

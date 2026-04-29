@@ -1,14 +1,15 @@
 package com.kweaver.dip.di
 
 import com.kweaver.dip.data.api.AuthInterceptor
+import com.kweaver.dip.data.api.BaseUrlInterceptor
 import com.kweaver.dip.data.api.DipHubApi
 import com.kweaver.dip.data.api.DipStudioApi
 import com.kweaver.dip.data.api.TokenAuthenticator
-import com.kweaver.dip.data.local.datastore.TokenDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -29,6 +30,7 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
+        baseUrlInterceptor: BaseUrlInterceptor,
         tokenAuthenticator: TokenAuthenticator
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -45,6 +47,7 @@ object NetworkModule {
         sslContext.init(null, trustAllCerts, SecureRandom())
 
         return OkHttpClient.Builder()
+            .addInterceptor(baseUrlInterceptor)
             .addInterceptor(authInterceptor)
             .authenticator(tokenAuthenticator)
             .addInterceptor(loggingInterceptor)
@@ -58,10 +61,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient, tokenDataStore: TokenDataStore): Retrofit {
-        val serverUrl = runBlocking { tokenDataStore.getServerUrl() }
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("$serverUrl/")
+            .baseUrl("https://192.168.40.110/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -76,7 +78,4 @@ object NetworkModule {
     @Singleton
     fun provideDipHubApi(retrofit: Retrofit): DipHubApi =
         retrofit.create(DipHubApi::class.java)
-
-    private fun runBlocking(block: suspend () -> String): String =
-        kotlinx.coroutines.runBlocking { block() }
 }

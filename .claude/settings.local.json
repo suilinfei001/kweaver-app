@@ -139,7 +139,21 @@
       "Bash(grep -oP '.{0,30}\\\\$\\\\.{0,100}' /tmp/signin.js)",
       "Bash(grep -oP '.{0,50}post\\\\\\(\"/oauth2/signin.{0,300}')",
       "Bash(grep -oP 'oauth2/signin.{0,500}' /tmp/signin.js)",
-      "Skill(verify)"
+      "Skill(verify)",
+      "Bash(wsl *)",
+      "Bash(ls -la \"D:\\\\\\\\wsl-backup\\\\\\\\\")",
+      "Bash(ls -la \"C:\\\\\\\\Users\\\\\\\\Yabo.sui\\\\\\\\ubuntu.tar\")",
+      "Bash(ls -la \"C:\\\\\\\\Users\\\\\\\\Yabo.sui\\\\\\\\wsl-backup\\\\\\\\\")",
+      "Bash(JAVA_HOME=\"C:/Users/Yabo.sui/.jdks/jdk-17.0.18+8\" ./gradlew :app:compileDebugKotlin --offline)",
+      "Bash(./gradlew assembleDebug --stacktrace)",
+      "Bash(adb logcat *)",
+      "Bash(export PATH=\"$PATH:/mnt/c/Users/Yabo.sui/AppData/Local/Android/Sdk/platform-tools\")",
+      "Bash(\"/c/Users/Yabo.sui/AppData/Local/Android/Sdk/platform-tools/adb.exe\" logcat *)",
+      "Bash(\"/c/Users/Yabo.sui/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell *)",
+      "Bash(/c/Users/Yabo.sui/AppData/Local/Android/Sdk/platform-tools/adb.exe kill-server *)",
+      "Bash(/c/Users/Yabo.sui/AppData/Local/Android/Sdk/platform-tools/adb.exe start-server *)",
+      "Bash(rm -rf /c/Users/Yabo.sui/StudioProjects/kweaver-app/.claude/skills)",
+      "Bash(mkdir -p /c/Users/Yabo.sui/StudioProjects/kweaver-app/.claude/skills)"
     ]
   }
 }

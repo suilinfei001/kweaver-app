@@ -1,6 +1,7 @@
 package com.kweaver.dip.data.repository
 
 import android.util.Log
+import com.kweaver.dip.data.api.BaseUrlInterceptor
 import com.kweaver.dip.data.api.OAuth2LoginHelper
 import com.kweaver.dip.data.local.datastore.TokenDataStore
 import kotlinx.coroutines.Dispatchers
@@ -9,11 +10,13 @@ import javax.inject.Inject
 
 class AuthRepository @Inject constructor(
     private val oAuth2LoginHelper: OAuth2LoginHelper,
-    private val tokenDataStore: TokenDataStore
+    private val tokenDataStore: TokenDataStore,
+    private val baseUrlInterceptor: BaseUrlInterceptor
 ) {
     suspend fun login(serverUrl: String, username: String, password: String): Result<String> {
         return try {
             tokenDataStore.saveServerUrl(serverUrl)
+            baseUrlInterceptor.updateBaseUrl(serverUrl)
             val result = withContext(Dispatchers.IO) {
                 oAuth2LoginHelper.login(serverUrl, username, password)
             }

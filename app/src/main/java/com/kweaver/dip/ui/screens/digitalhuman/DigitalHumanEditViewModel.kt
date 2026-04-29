@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.kweaver.dip.data.model.*
 import com.kweaver.dip.data.repository.DigitalHumanRepository
 import com.kweaver.dip.data.repository.SkillRepository
+import com.kweaver.dip.domain.usecase.digitalhuman.SaveDigitalHumanUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +32,8 @@ data class DigitalHumanEditUiState(
 @HiltViewModel
 class DigitalHumanEditViewModel @Inject constructor(
     private val digitalHumanRepository: DigitalHumanRepository,
-    private val skillRepository: SkillRepository
+    private val skillRepository: SkillRepository,
+    private val saveDigitalHumanUseCase: SaveDigitalHumanUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DigitalHumanEditUiState())
@@ -112,39 +114,17 @@ class DigitalHumanEditViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isSaving = true, error = null)
 
-            val bkn = state.bknEntries.filter { it.name.isNotBlank() }
-            val channel = if (state.channelAppId.isNotBlank()) {
-                ChannelConfig(
-                    type = state.channelType.ifBlank { null },
-                    appId = state.channelAppId,
-                    appSecret = state.channelAppSecret
-                )
-            } else null
-
-            val result = if (digitalHumanId != null) {
-                digitalHumanRepository.updateDigitalHuman(
-                    digitalHumanId,
-                    UpdateDigitalHumanRequest(
-                        name = state.name,
-                        creature = state.creature.ifBlank { null },
-                        soul = state.soul.ifBlank { null },
-                        bkn = bkn.ifEmpty { null },
-                        skills = state.selectedSkills.ifEmpty { null },
-                        channel = channel
-                    )
-                )
-            } else {
-                digitalHumanRepository.createDigitalHuman(
-                    CreateDigitalHumanRequest(
-                        name = state.name,
-                        creature = state.creature.ifBlank { null },
-                        soul = state.soul.ifBlank { null },
-                        bkn = bkn.ifEmpty { null },
-                        skills = state.selectedSkills.ifEmpty { null },
-                        channel = channel
-                    )
-                )
-            }
+            val result = saveDigitalHumanUseCase(
+                id = digitalHumanId,
+                name = state.name,
+                creature = state.creature,
+                soul = state.soul,
+                bknEntries = state.bknEntries,
+                selectedSkills = state.selectedSkills,
+                channelType = state.channelType,
+                channelAppId = state.channelAppId,
+                channelAppSecret = state.channelAppSecret
+            )
 
             result.fold(
                 onSuccess = { _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true) },

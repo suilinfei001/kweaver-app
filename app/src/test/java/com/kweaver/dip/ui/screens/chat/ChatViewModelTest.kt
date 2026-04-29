@@ -2,7 +2,8 @@ package com.kweaver.dip.ui.screens.chat
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.kweaver.dip.data.model.SseEvent
-import com.kweaver.dip.data.repository.ChatRepository
+import com.kweaver.dip.domain.usecase.chat.CreateSessionUseCase
+import com.kweaver.dip.domain.usecase.chat.SendMessageUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -27,7 +28,10 @@ class ChatViewModelTest {
     val instantExecutorRule = InstantTaskExecutorRule()
 
     @Mock
-    private lateinit var chatRepository: ChatRepository
+    private lateinit var createSessionUseCase: CreateSessionUseCase
+
+    @Mock
+    private lateinit var sendMessageUseCase: SendMessageUseCase
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -44,7 +48,7 @@ class ChatViewModelTest {
 
     @Test
     fun `initSession with existing key sets sessionKey`() = runTest {
-        val viewModel = ChatViewModel(chatRepository)
+        val viewModel = ChatViewModel(createSessionUseCase, sendMessageUseCase)
         viewModel.initSession("agent1", "existing-key")
         advanceUntilIdle()
 
@@ -54,10 +58,10 @@ class ChatViewModelTest {
 
     @Test
     fun `initSession creates new session key`() = runTest {
-        whenever(chatRepository.createSessionKey("agent1"))
+        whenever(createSessionUseCase("agent1"))
             .thenReturn(Result.success("new-key"))
 
-        val viewModel = ChatViewModel(chatRepository)
+        val viewModel = ChatViewModel(createSessionUseCase, sendMessageUseCase)
         viewModel.initSession("agent1", null)
         advanceUntilIdle()
 
@@ -67,10 +71,10 @@ class ChatViewModelTest {
 
     @Test
     fun `initSession handles error`() = runTest {
-        whenever(chatRepository.createSessionKey("agent1"))
+        whenever(createSessionUseCase("agent1"))
             .thenReturn(Result.failure(Exception("No connection")))
 
-        val viewModel = ChatViewModel(chatRepository)
+        val viewModel = ChatViewModel(createSessionUseCase, sendMessageUseCase)
         viewModel.initSession("agent1", null)
         advanceUntilIdle()
 
@@ -80,7 +84,7 @@ class ChatViewModelTest {
 
     @Test
     fun `sendMessage with blank text does nothing`() = runTest {
-        val viewModel = ChatViewModel(chatRepository)
+        val viewModel = ChatViewModel(createSessionUseCase, sendMessageUseCase)
         viewModel.initSession("agent1", "key1")
         viewModel.sendMessage("")
         advanceUntilIdle()
@@ -90,7 +94,7 @@ class ChatViewModelTest {
 
     @Test
     fun `sendMessage without sessionKey does nothing`() = runTest {
-        val viewModel = ChatViewModel(chatRepository)
+        val viewModel = ChatViewModel(createSessionUseCase, sendMessageUseCase)
         viewModel.sendMessage("hello")
         advanceUntilIdle()
 
@@ -99,13 +103,13 @@ class ChatViewModelTest {
 
     @Test
     fun `sendMessage adds user message and streams response`() = runTest {
-        whenever(chatRepository.streamChat("key1", "hello"))
+        whenever(sendMessageUseCase("key1", "hello", null))
             .thenReturn(flowOf(
                 SseEvent("message", "world"),
                 SseEvent("done", "")
             ))
 
-        val viewModel = ChatViewModel(chatRepository)
+        val viewModel = ChatViewModel(createSessionUseCase, sendMessageUseCase)
         viewModel.initSession("agent1", "key1")
         advanceUntilIdle()
 
@@ -121,10 +125,10 @@ class ChatViewModelTest {
 
     @Test
     fun `sendMessage handles error event`() = runTest {
-        whenever(chatRepository.streamChat("key1", "hello"))
+        whenever(sendMessageUseCase("key1", "hello", null))
             .thenReturn(flowOf(SseEvent("error", "Rate limited")))
 
-        val viewModel = ChatViewModel(chatRepository)
+        val viewModel = ChatViewModel(createSessionUseCase, sendMessageUseCase)
         viewModel.initSession("agent1", "key1")
         advanceUntilIdle()
 

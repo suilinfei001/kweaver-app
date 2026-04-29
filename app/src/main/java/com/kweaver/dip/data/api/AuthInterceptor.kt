@@ -12,10 +12,19 @@ class AuthInterceptor @Inject constructor(
     private val tokenDataStore: TokenDataStore
 ) : Interceptor {
 
+    @Volatile
+    private var cachedToken: String? = null
+
+    fun updateToken(token: String?) {
+        cachedToken = token
+    }
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        val token = runBlocking { tokenDataStore.getAccessToken() }
+        val token = cachedToken ?: runBlocking { tokenDataStore.getAccessToken() }
+            ?.also { cachedToken = it }
+
         if (token.isNullOrBlank()) {
             return chain.proceed(originalRequest)
         }

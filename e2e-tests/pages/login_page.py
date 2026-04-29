@@ -8,8 +8,8 @@ class LoginPage(BasePage):
     SIGN_IN_BUTTON = "login_sign_in_button"
     ERROR_MESSAGE = "login_error_message"
 
-    def is_loaded(self):
-        return self.is_element_present(self.SERVER_URL_INPUT)
+    def is_loaded(self, timeout=10):
+        return self.is_element_present(self.SERVER_URL_INPUT, timeout=timeout)
 
     def enter_server_url(self, url: str):
         self.type_text(self.SERVER_URL_INPUT, url)

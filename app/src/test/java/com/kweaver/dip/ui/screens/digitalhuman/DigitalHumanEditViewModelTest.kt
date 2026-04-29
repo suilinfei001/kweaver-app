@@ -5,6 +5,7 @@ import com.kweaver.dip.data.model.DigitalHumanDetail
 import com.kweaver.dip.data.model.Skill
 import com.kweaver.dip.data.repository.DigitalHumanRepository
 import com.kweaver.dip.data.repository.SkillRepository
+import com.kweaver.dip.domain.usecase.digitalhuman.SaveDigitalHumanUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -33,6 +34,9 @@ class DigitalHumanEditViewModelTest {
     @Mock
     private lateinit var skillRepository: SkillRepository
 
+    @Mock
+    private lateinit var saveDigitalHumanUseCase: SaveDigitalHumanUseCase
+
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
@@ -50,7 +54,7 @@ class DigitalHumanEditViewModelTest {
     fun `init with null id sets create mode`() = runTest {
         whenever(skillRepository.listSkills()).thenReturn(Result.success(emptyList()))
 
-        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository)
+        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository, saveDigitalHumanUseCase)
         viewModel.init(null)
         advanceUntilIdle()
 
@@ -68,7 +72,7 @@ class DigitalHumanEditViewModelTest {
         whenever(skillRepository.listSkills()).thenReturn(Result.success(listOf(Skill("skill1"))))
         whenever(digitalHumanRepository.getDigitalHuman("dh1")).thenReturn(Result.success(detail))
 
-        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository)
+        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository, saveDigitalHumanUseCase)
         viewModel.init("dh1")
         advanceUntilIdle()
 
@@ -82,7 +86,7 @@ class DigitalHumanEditViewModelTest {
     @Test
     fun `updateName updates state`() = runTest {
         whenever(skillRepository.listSkills()).thenReturn(Result.success(emptyList()))
-        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository)
+        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository, saveDigitalHumanUseCase)
         viewModel.updateName("NewName")
         assertEquals("NewName", viewModel.uiState.value.name)
     }
@@ -90,7 +94,7 @@ class DigitalHumanEditViewModelTest {
     @Test
     fun `addBknEntry adds empty entry`() = runTest {
         whenever(skillRepository.listSkills()).thenReturn(Result.success(emptyList()))
-        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository)
+        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository, saveDigitalHumanUseCase)
         viewModel.addBknEntry()
         assertEquals(1, viewModel.uiState.value.bknEntries.size)
     }
@@ -98,7 +102,7 @@ class DigitalHumanEditViewModelTest {
     @Test
     fun `removeBknEntry removes at index`() = runTest {
         whenever(skillRepository.listSkills()).thenReturn(Result.success(emptyList()))
-        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository)
+        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository, saveDigitalHumanUseCase)
         viewModel.addBknEntry()
         viewModel.updateBknEntry(0, "KB1", "http://kb1.com")
         viewModel.addBknEntry()
@@ -111,7 +115,7 @@ class DigitalHumanEditViewModelTest {
     @Test
     fun `toggleSkill adds and removes skill`() = runTest {
         whenever(skillRepository.listSkills()).thenReturn(Result.success(emptyList()))
-        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository)
+        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository, saveDigitalHumanUseCase)
         viewModel.toggleSkill("skill1")
         assertTrue(viewModel.uiState.value.selectedSkills.contains("skill1"))
         viewModel.toggleSkill("skill1")
@@ -121,7 +125,7 @@ class DigitalHumanEditViewModelTest {
     @Test
     fun `save with blank name shows error`() = runTest {
         whenever(skillRepository.listSkills()).thenReturn(Result.success(emptyList()))
-        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository)
+        val viewModel = DigitalHumanEditViewModel(digitalHumanRepository, skillRepository, saveDigitalHumanUseCase)
         viewModel.save(null)
         assertEquals("Name is required", viewModel.uiState.value.error)
     }

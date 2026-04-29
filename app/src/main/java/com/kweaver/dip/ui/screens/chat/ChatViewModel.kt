@@ -3,7 +3,8 @@ package com.kweaver.dip.ui.screens.chat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kweaver.dip.data.model.*
-import com.kweaver.dip.data.repository.ChatRepository
+import com.kweaver.dip.domain.usecase.chat.CreateSessionUseCase
+import com.kweaver.dip.domain.usecase.chat.SendMessageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,8 @@ data class ChatUiState(
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val chatRepository: ChatRepository
+    private val createSessionUseCase: CreateSessionUseCase,
+    private val sendMessageUseCase: SendMessageUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChatUiState())
@@ -37,7 +39,7 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isCreatingSession = true)
-            chatRepository.createSessionKey(agentId).fold(
+            createSessionUseCase(agentId).fold(
                 onSuccess = { key ->
                     _uiState.value = _uiState.value.copy(sessionKey = key, isCreatingSession = false)
                 },
@@ -69,7 +71,7 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                chatRepository.streamChat(sessionKey, text).collect { event ->
+                sendMessageUseCase(sessionKey, text).collect { event ->
                     when (event.event) {
                         "error" -> {
                             _uiState.value = _uiState.value.copy(

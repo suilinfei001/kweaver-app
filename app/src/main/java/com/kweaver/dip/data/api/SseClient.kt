@@ -1,6 +1,5 @@
 package com.kweaver.dip.data.api
 
-import com.kweaver.dip.data.local.datastore.TokenDataStore
 import com.kweaver.dip.data.model.SseEvent
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -17,8 +16,7 @@ import javax.inject.Singleton
 
 @Singleton
 class SseClient @Inject constructor(
-    private val okHttpClient: OkHttpClient,
-    private val tokenDataStore: TokenDataStore
+    private val okHttpClient: OkHttpClient
 ) {
     fun streamChat(
         serverUrl: String,
@@ -27,8 +25,6 @@ class SseClient @Inject constructor(
         message: String,
         attachments: List<Pair<String, String>>? = null
     ): Flow<SseEvent> = callbackFlow {
-        val token = tokenDataStore.getAccessToken()
-
         val jsonBody = buildString {
             append("{\"input\":")
             append(com.google.gson.Gson().toJson(message))
@@ -46,12 +42,10 @@ class SseClient @Inject constructor(
         val request = Request.Builder()
             .url("$serverUrl/api/dip-studio/v1/chat/agent")
             .post(jsonBody.toRequestBody("application/json".toMediaType()))
-            .addHeader("Authorization", "Bearer ${token ?: ""}")
-            .addHeader("Token", token ?: "")
-            .addHeader("x-openclaw-session-key", sessionKey)
-            .addHeader("x-user-id", userId)
-            .addHeader("Accept", "text/event-stream")
-            .addHeader("Cache-Control", "no-cache")
+            .header("x-openclaw-session-key", sessionKey)
+            .header("x-user-id", userId)
+            .header("Accept", "text/event-stream")
+            .header("Cache-Control", "no-cache")
             .build()
 
         val call = okHttpClient.newCall(request)
