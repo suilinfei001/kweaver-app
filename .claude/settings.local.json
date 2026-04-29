@@ -153,7 +153,9 @@
       "Bash(/c/Users/Yabo.sui/AppData/Local/Android/Sdk/platform-tools/adb.exe kill-server *)",
       "Bash(/c/Users/Yabo.sui/AppData/Local/Android/Sdk/platform-tools/adb.exe start-server *)",
       "Bash(rm -rf /c/Users/Yabo.sui/StudioProjects/kweaver-app/.claude/skills)",
-      "Bash(mkdir -p /c/Users/Yabo.sui/StudioProjects/kweaver-app/.claude/skills)"
+      "Bash(mkdir -p /c/Users/Yabo.sui/StudioProjects/kweaver-app/.claude/skills)",
+      "Bash(grep -E '^\\\\.\\\\/[^/]+$')",
+      "Bash(grep -E '^\\\\.\\\\/[^/]+\\\\/[^/]+$')"
     ]
   }
 }
