@@ -32,15 +32,6 @@ class OAuth2LoginHelper @Inject constructor() {
 
     companion object {
         private const val TAG = "OAuth2Login"
-
-        private const val RSA_PUBLIC_KEY =
-            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsyOstgbYuubBi2PUqeVj" +
-            "GKlkwVUY6w1Y8d4k116dI2SkZI8fxcjHALv77kItO4jYLVplk9gO4HAtsisnNE2o" +
-            "wlYIqdmyEPMwupaeFFFcg751oiTXJiYbtX7ABzU5KQYPjRSEjMq6i5qu/mL67XTk" +
-            "hvKwrC83zme66qaKApmKupDODPb0RRkutK/zHfd1zL7sciBQ6psnNadh8pE24w8O" +
-            "2XVy1v2bgSNkGHABgncR7seyIg81JQ3c/Axxd6GsTztjLnlvGAlmT1TphE84mi99" +
-            "fUaGD2A1u1qdIuNc+XuisFeNcUW6fct0+x97eS2eEGRr/7qxWmO/P20sFVzXc2bF" +
-            "1QIDAQAB"
     }
 
     data class LoginResult(val accessToken: String, val refreshToken: String?)
@@ -125,9 +116,14 @@ class OAuth2LoginHelper @Inject constructor() {
         val csrfToken = pageProps.getString("csrftoken")
         Log.d(TAG, "Got challenge: ${challenge.take(8)}..., csrf: ${csrfToken.take(8)}...")
 
-        // Step 4: RSA encrypt password and POST to /oauth2/signin
-        Log.d(TAG, "Step 4: Posting credentials")
-        val encryptedPassword = rsaEncryptPassword(password)
+        // Step 4: Fetch RSA public key from signin JS chunk
+        Log.d(TAG, "Step 4: Fetching RSA public key")
+        val rsaPublicKey = fetchRsaPublicKey(html, signinUrl)
+        Log.d(TAG, "Got RSA public key, length: ${rsaPublicKey.length}")
+
+        // Step 5: RSA encrypt password and POST to /oauth2/signin
+        Log.d(TAG, "Step 5: Posting credentials")
+        val encryptedPassword = rsaEncryptPassword(password, rsaPublicKey)
 
         val postBody = JSONObject().apply {
             put("_csrf", csrfToken)
@@ -167,8 +163,8 @@ class OAuth2LoginHelper @Inject constructor() {
         val redirectUrl = parseSigninRedirect(signinResponseStr ?: throw Exception("Empty signin response"))
         Log.d(TAG, "Got redirect URL: ${redirectUrl.take(60)}...")
 
-        // Step 5: Follow redirects through consent to callback → extract tokens
-        Log.d(TAG, "Step 5: Following redirects to callback")
+        // Step 6: Follow redirects through consent to callback → extract tokens
+        Log.d(TAG, "Step 6: Following redirects to callback")
         return followRedirectsForTokens(serverUrl, resolveUrl(serverUrl, redirectUrl))
     }
 
@@ -201,8 +197,8 @@ class OAuth2LoginHelper @Inject constructor() {
         return root.getJSONObject("props").getJSONObject("pageProps")
     }
 
-    private fun rsaEncryptPassword(password: String): String {
-        val keyBytes = Base64.decode(RSA_PUBLIC_KEY, Base64.NO_WRAP)
+    private fun rsaEncryptPassword(password: String, publicKeyB64: String): String {
+        val keyBytes = Base64.decode(publicKeyB64, Base64.NO_WRAP)
         val keySpec = X509EncodedKeySpec(keyBytes)
         val keyFactory = KeyFactory.getInstance("RSA")
         val publicKey = keyFactory.generatePublic(keySpec)
@@ -212,6 +208,38 @@ class OAuth2LoginHelper @Inject constructor() {
         val encrypted = cipher.doFinal(password.toByteArray(Charsets.UTF_8))
 
         return Base64.encodeToString(encrypted, Base64.NO_WRAP)
+    }
+
+    private fun fetchRsaPublicKey(html: String, signinUrl: String): String {
+        val chunkRegex = Regex("""src="(\./_next/static/chunks/pages/signin-[^"]+\.js)"""")
+        val chunkMatch = chunkRegex.find(html)
+            ?: throw Exception("Cannot find signin JS chunk in page")
+
+        val chunkPath = chunkMatch.groupValues[1].removePrefix("./")
+        val uri = URI(signinUrl)
+        val port = if (uri.port != -1) ":${uri.port}" else ""
+        val chunkUrl = "${uri.scheme}://${uri.host}$port${uri.path.substringBeforeLast("/")}/$chunkPath"
+        Log.d(TAG, "Fetching signin JS chunk: $chunkUrl")
+
+        val response = execute(Request.Builder().url(chunkUrl).build())
+        if (response.code != 200) {
+            response.close()
+            throw Exception("Failed to fetch signin JS chunk: ${response.code}")
+        }
+        val jsContent = response.body?.string() ?: throw Exception("Empty JS chunk response")
+        response.close()
+
+        val pemRegex = Regex(
+            """-----BEGIN PUBLIC KEY-----\s*\n(MIIBIj[A-Za-z0-9+/=\n]+?)\s*-----END PUBLIC KEY-----""",
+            RegexOption.DOT_MATCHES_ALL
+        )
+        val keys = pemRegex.findAll(jsContent).map { match ->
+            match.groupValues[1].replace("\\n", "").replace("\n", "").replace(" ", "")
+        }.toList()
+
+        if (keys.isEmpty()) throw Exception("No RSA public key found in signin JS chunk")
+
+        return keys.maxByOrNull { it.length }!!
     }
 
     private fun buildSigninPostUrl(signinUrl: String): String {
