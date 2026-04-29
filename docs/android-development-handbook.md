@@ -30,7 +30,8 @@
   - [5.3 集成测试](#53-集成测试)
   - [5.4 E2E 测试](#54-e2e-测试)
   - [5.5 验证流水线 (/verify)](#55-验证流水线-verify)
-  - [5.6 测试策略总结](#56-测试策略总结)
+  - [5.6 CI 持续集成](#56-ci-持续集成)
+  - [5.7 测试策略总结](#57-测试策略总结)
 
 ---
 
@@ -800,7 +801,90 @@ python -m pytest tests/ -v
 - 修复后必须从步骤 1 重新开始
 - 仅修改 `.md` 或 `.gitignore` 时可跳过
 
-### 5.6 测试策略总结
+### 5.6 CI 持续集成
+
+项目使用 **GitHub Actions** 实现持续集成，配置文件位于 `.github/workflows/android-ci.yml`。
+
+**触发条件：**
+
+- `push` 到 `main` 或 `develop` 分支
+- 针对 `main` 或 `develop` 分支的 Pull Request
+
+同一分支的重复运行会自动取消（`concurrency` 配置）。
+
+**流水线结构：**
+
+```
+┌──────────────┐     ┌──────────────┐
+│  Lint 检查    │     │  单元测试     │     （并行执行）
+│ lintDebug    │     │ testDebug    │
+└──────┬───────┘     └──────┬───────┘
+       │                    │
+       └────────┬───────────┘
+                ▼
+       ┌──────────────┐
+       │  构建 APK    │     （Lint + 测试通过后执行）
+       │ Debug+Release│
+       └──────────────┘
+```
+
+**Job 详情：**
+
+| Job | 命令 | 产物 | 保留天数 |
+|---|---|---|---|
+| Lint & Code Check | `./gradlew lintDebug` | `lint-results-debug.html` | 7 |
+| Unit Tests | `./gradlew testDebugUnitTest` | 测试报告 HTML | 7 |
+| Build APK | `./gradlew assembleDebug` + `assembleRelease` | Debug APK + Release APK（已签名） | 30 |
+
+**运行环境：**
+
+- Ubuntu Latest
+- JDK 17 (Temurin)
+- Gradle 缓存（通过 `gradle/actions/setup-gradle@v4`）
+
+**Release APK 签名：**
+
+CI 构建 Release APK 时使用 keystore 签名。签名配置通过 GitHub Secrets 注入，`app/build.gradle.kts` 中的 `signingConfigs` 从环境变量读取密码：
+
+```kotlin
+signingConfigs {
+    create("release") {
+        val ksFile = file("kweaver-release.jks")
+        if (ksFile.exists()) {
+            storeFile = ksFile
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            keyAlias = System.getenv("KEY_ALIAS") ?: "kweaver"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+        }
+    }
+}
+```
+
+CI 中通过 base64 解码还原 keystore 文件：
+
+```yaml
+- name: Decode Keystore
+  run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/kweaver-release.jks
+```
+
+**所需 GitHub Secrets：**
+
+| Secret 名 | 说明 |
+|---|---|
+| `KEYSTORE_BASE64` | keystore 文件的 base64 编码 |
+| `KEYSTORE_PASSWORD` | 密钥库密码 |
+| `KEY_ALIAS` | 密钥别名（`kweaver`） |
+| `KEY_PASSWORD` | 密钥密码 |
+
+**下载构建产物：**
+
+CI 运行完成后，在 GitHub 仓库 → **Actions** → 选择对应运行 → **Artifacts** 区域下载：
+- `app-debug` — Debug APK
+- `app-release` — 已签名的 Release APK
+- `lint-report` — Lint 检查报告
+- `unit-test-report` — 单元测试报告
+
+### 5.7 测试策略总结
 
 ```
                     ┌─────────────────────┐
@@ -851,6 +935,8 @@ python -m pytest tests/ -v
 - [ ] 在 Claude Code 中执行 `/verify` 可以正常运行
 - [ ] Python >= 3.10 已安装，`e2e-tests/.venv` 已创建
 - [ ] `npm install -g appium` 已执行，`appium` 命令可用
+- [ ] GitHub Actions CI 配置已就绪（`.github/workflows/android-ci.yml`）
+- [ ] GitHub Secrets 已添加（`KEYSTORE_BASE64`、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`）
 
 ---
 

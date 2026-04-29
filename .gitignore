@@ -16,3 +16,6 @@ e2e-tests/**/__pycache__/
 e2e-tests/*.egg-info/
 e2e-tests/.pytest_cache/
 /reference/
+
+# Signing keystore
+*.jks
