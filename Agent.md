@@ -21,6 +21,17 @@ JAVA_HOME="C:/Users/Yabo.sui/.jdks/jdk-17.0.18+8" ./gradlew :app:compileDebugKot
 - `ui/navigation/` — 导航路由（待添加）
 - `e2e-tests/` — Python Appium E2E 测试项目
 
+## UI Design Workflow
+
+**当需要实现 UI 布局（Compose Screen、组件、页面）时，必须先调用 `/frontend-design` 技能生成设计方案，再进行编码。**
+
+这确保 UI 设计质量一致，避免直接写代码导致的设计缺陷。
+
+适用场景：
+- 新建 Compose Screen 页面
+- 设计复杂的 Compose 布局组件
+- 重新设计现有页面的布局
+
 ## Code Change Workflow
 
 **每次修改代码后，必须执行 `/verify` 运行完整验证流水线。** 这不是可选的，是强制的。
