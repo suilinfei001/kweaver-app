@@ -10,24 +10,48 @@
 JAVA_HOME="C:/Users/Yabo.sui/.jdks/jdk-17.0.18+8" ./gradlew :app:compileDebugKotlin
 ```
 
-### Login API 响应格式
-
-登录接口 (`GET /api/dip-hub/v1/login`) 的响应体可能是：
-- **JSON 对象**：`{"access_token": "xxx", "refresh_token": "yyy"}`
-- **纯字符串**：直接返回 token 值
-
-代码已做兼容处理：先用 `JsonParser.parseString()` 判断类型，JSON 对象则提取 `access_token` 字段，否则整个 body 作为 token。
-
 ### 项目结构
 
-- `data/api/` — Retrofit API 接口定义
-- `data/repository/` — 数据仓库层
-- `data/model/` — 数据模型
-- `data/local/datastore/` — 本地存储（Token 等）
-- `di/` — Hilt 依赖注入模块
-- `ui/screens/` — Compose UI 页面
-- `ui/navigation/` — 导航路由
+- `data/api/` — Retrofit API 接口定义（待添加）
+- `data/repository/` — 数据仓库层（待添加）
+- `data/model/` — 数据模型（待添加）
+- `data/local/datastore/` — 本地存储（待添加）
+- `di/` — Hilt 依赖注入模块（待添加）
+- `ui/screens/` — Compose UI 页面（待添加）
+- `ui/navigation/` — 导航路由（待添加）
 - `e2e-tests/` — Python Appium E2E 测试项目
+
+## UI Design Workflow
+
+**当需要实现 UI 布局（Compose Screen、组件、页面）时，必须先调用 `/frontend-design` 技能生成设计方案，再进行编码。**
+
+这确保 UI 设计质量一致，避免直接写代码导致的设计缺陷。
+
+适用场景：
+- 新建 Compose Screen 页面
+- 设计复杂的 Compose 布局组件
+- 重新设计现有页面的布局
+
+## Test-Driven Development
+
+**新增或修改功能时，必须同步新增或修改对应的测试代码。** 这不是可选的，是强制的。
+
+测试覆盖要求：
+
+| 功能变更 | 必须更新的测试 |
+|---|---|
+| Repository 层 | `app/src/test/` 单元测试 |
+| ViewModel 层 | `app/src/test/` 单元测试 |
+| UseCase 层 | `app/src/test/` 单元测试 |
+| 新增 Screen/页面 | `e2e-tests/pages/` Page Object + `e2e-tests/tests/` E2E 测试 |
+| 新增导航路由 | `e2e-tests/tests/` E2E 导航测试 |
+| 修改已有页面交互 | 更新对应的 E2E 测试 |
+
+原则：
+- 每个新功能必须有对应的测试，不能只写功能代码不写测试
+- 修改已有功能时，同步更新受影响的测试用例
+- E2E 测试使用 Page Object Model 模式，在 `e2e-tests/pages/` 中维护页面对象
+- UI 元素必须设置 `contentDescription` 或 `testTag`，确保 E2E 测试可定位
 
 ## Code Change Workflow
 

@@ -175,7 +175,9 @@
       "Bash(grep -oP 'MIIBIj[A-Za-z0-9+/\\\\n]+={0,2}' /tmp/signin-js.txt)",
       "Bash(grep -oP 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA[A-Za-z0-9+/]+={0,2}' /tmp/signin-js.txt)",
       "Bash(grep -oP 'BEGIN PUBLIC KEY.{0,1000}END PUBLIC KEY' /tmp/signin-js.txt)",
-      "Bash(JAVA_HOME=\"C:/Users/Yabo.sui/.jdks/jdk-17.0.18+8\" ./gradlew :app:testDebugUnitTest)"
+      "Bash(JAVA_HOME=\"C:/Users/Yabo.sui/.jdks/jdk-17.0.18+8\" ./gradlew :app:testDebugUnitTest)",
+      "Bash(dir /s /b \"C:/Users/Yabo.sui/StudioProjects/kweaver-app\")",
+      "Bash(git checkout *)"
     ]
   }
 }

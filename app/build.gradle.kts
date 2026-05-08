@@ -63,6 +63,7 @@ android {
 }
 
 dependencies {
+    // Core Android
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -71,6 +72,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
 
+    // Compose UI
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
@@ -79,29 +81,37 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
     debugImplementation(libs.compose.ui.tooling)
 
+    // Dependency Injection (Hilt)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
-    implementation(libs.gson)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging)
-    implementation(libs.okhttp.sse)
+    // Networking (add back when needed)
+    // implementation(libs.gson)
+    // implementation(libs.retrofit)
+    // implementation(libs.retrofit.gson)
+    // implementation(libs.okhttp)
+    // implementation(libs.okhttp.logging)
+    // implementation(libs.okhttp.sse)
 
-    implementation(libs.room.runtime)
-    implementation(libs.room.ktx)
-    ksp(libs.room.compiler)
+    // Local storage (add back when needed)
+    // implementation(libs.room.runtime)
+    // implementation(libs.room.ktx)
+    // ksp(libs.room.compiler)
 
-    implementation(libs.coil.compose)
+    // Image loading (add back when needed)
+    // implementation(libs.coil.compose)
+
+    // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // Instrumented test dependencies
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.androidx.test.runner)
     kspAndroidTest(libs.hilt.compiler)
 
+    // Unit test dependencies
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.kotlinx.coroutines.test)

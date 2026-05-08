@@ -6,10 +6,6 @@ from appium.options.android import UiAutomator2Options
 ADB = "C:/Users/Yabo.sui/AppData/Local/Android/Sdk/platform-tools/adb.exe"
 ORIGINAL_IME = "com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME"
 
-TEST_SERVER_URL = "https://192.168.40.110"
-TEST_USERNAME = "admin"
-TEST_PASSWORD = "eisoo.com"
-
 
 def _restore_keyboard():
     subprocess.run([ADB, "shell", "settings", "put", "secure",
@@ -77,21 +73,3 @@ def reset_app(appium_driver, request):
         appium_driver.execute_script("mobile: clearApp", {"appId": "com.kweaver.dip"})
         appium_driver.activate_app("com.kweaver.dip")
     yield
-
-
-@pytest.fixture
-def logged_in_driver(appium_driver):
-    """Ensures the app is logged in and on the home page. Use for tests that need auth."""
-    from pages.login_page import LoginPage
-    from pages.home_page import HomePage
-
-    login_page = LoginPage(appium_driver)
-    if login_page.is_loaded(timeout=10):
-        login_page.login(TEST_SERVER_URL, TEST_USERNAME, TEST_PASSWORD)
-
-    import time
-    time.sleep(3)  # Wait for navigation after login
-
-    home = HomePage(appium_driver)
-    assert home.is_loaded(timeout=30), "Should be on home page after login"
-    return appium_driver
