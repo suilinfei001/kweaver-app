@@ -10,23 +10,15 @@
 JAVA_HOME="C:/Users/Yabo.sui/.jdks/jdk-17.0.18+8" ./gradlew :app:compileDebugKotlin
 ```
 
-### Login API 响应格式
-
-登录接口 (`GET /api/dip-hub/v1/login`) 的响应体可能是：
-- **JSON 对象**：`{"access_token": "xxx", "refresh_token": "yyy"}`
-- **纯字符串**：直接返回 token 值
-
-代码已做兼容处理：先用 `JsonParser.parseString()` 判断类型，JSON 对象则提取 `access_token` 字段，否则整个 body 作为 token。
-
 ### 项目结构
 
-- `data/api/` — Retrofit API 接口定义
-- `data/repository/` — 数据仓库层
-- `data/model/` — 数据模型
-- `data/local/datastore/` — 本地存储（Token 等）
-- `di/` — Hilt 依赖注入模块
-- `ui/screens/` — Compose UI 页面
-- `ui/navigation/` — 导航路由
+- `data/api/` — Retrofit API 接口定义（待添加）
+- `data/repository/` — 数据仓库层（待添加）
+- `data/model/` — 数据模型（待添加）
+- `data/local/datastore/` — 本地存储（待添加）
+- `di/` — Hilt 依赖注入模块（待添加）
+- `ui/screens/` — Compose UI 页面（待添加）
+- `ui/navigation/` — 导航路由（待添加）
 - `e2e-tests/` — Python Appium E2E 测试项目
 
 ## Code Change Workflow
