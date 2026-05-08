@@ -1,17 +1,6 @@
-# KWeaver DIP Android App
+# Android App Demo
 
-一个基于 AI 的数字人对话平台 Android 客户端，采用现代 Android 开发技术栈构建，适合作为 **MVVM + Domain Layer 架构 + AI 辅助开发 + TDD 测试驱动** 的学习示例。
-
-## 功能模块
-
-| 模块 | 说明 |
-|---|---|
-| AI Chat | 与数字人进行实时 SSE 流式对话 |
-| Digital Human | 数字人（AI Agent）管理，支持创建/编辑/删除 |
-| AI Store | 应用商店，浏览和安装 AI 应用 |
-| Session History | 对话历史记录 |
-| Skills | AI 技能管理 |
-| Plans | 计划管理 |
+Android 客户端学习项目，演示现代 Android 开发的完整工程实践：**MVVM + Domain Layer 架构、TDD 测试驱动、AI 辅助开发**。
 
 ## 技术栈
 
@@ -25,6 +14,7 @@
 | 异步 | Kotlin Coroutines + StateFlow |
 | 本地存储 | DataStore |
 | 导航 | Navigation Compose |
+| E2E 测试 | Appium + pytest + Page Object Model |
 
 ## 项目结构
 
@@ -32,42 +22,36 @@
 kweaver-app/
 ├── app/                          # Android 应用模块
 │   └── src/main/java/com/kweaver/dip/
-│       ├── data/                 # 数据层
-│       │   ├── api/              # Retrofit API 接口
-│       │   ├── model/            # 数据模型
-│       │   ├── repository/       # Repository 实现
-│       │   └── local/datastore/  # 本地存储
+│       ├── data/                 # 数据层（API、模型、仓库、本地存储）
 │       ├── di/                   # Hilt 依赖注入模块
-│       ├── domain/usecase/       # 业务逻辑 (UseCase)
+│       ├── domain/usecase/       # 业务逻辑 UseCase
 │       ├── ui/screens/           # Compose UI 页面
-│       └── ui/navigation/       # 导航路由
+│       └── ui/navigation/        # 导航路由
 ├── e2e-tests/                    # Appium E2E 测试 (Python)
 ├── docs/                         # 开发文档
 ├── .claude/                      # AI 工具配置
 │   ├── skills/                   # Claude Code Skills
 │   └── plans/                    # 架构计划文档
 ├── CLAUDE.md                     # AI 工具项目指令
-├── Agent.md                      # 代码变更工作流规范
-└── reference/                    # Web 端参考代码
+└── Agent.md                      # 代码变更工作流规范
 ```
 
-## 测试覆盖
+## 测试体系
 
-| 测试层级 | 数量 | 框架 |
+| 测试层级 | 框架 | 说明 |
 |---|---|---|
-| 单元测试 | 23 个文件 | JUnit + Mockito + Coroutines Test |
-| 集成测试 | 4 个文件 | Hilt Android Test + AndroidX Test |
-| E2E 测试 | 16 个文件，17 个用例 | Appium + pytest + Page Object Model |
+| 单元测试 | JUnit + Mockito + Coroutines Test | Repository / ViewModel / UseCase 逻辑验证 |
+| 集成测试 | Hilt Android Test + AndroidX Test | DI 图和 Android 组件集成验证 |
+| E2E 测试 | Appium + pytest + Page Object Model | 端到端 UI 自动化验证 |
 
 ## 快速开始
 
 ### 环境要求
 
-- Windows 10+ / macOS / Linux
 - JDK 17（**必须**，高版本会导致编译失败）
 - Android Studio（最新稳定版）
 - Android SDK API 35
-- 16 GB+ 内存
+- Python 3.10+（E2E 测试）
 
 ### 构建与运行
 
