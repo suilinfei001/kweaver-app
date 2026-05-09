@@ -86,18 +86,21 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
 
-    // Networking (add back when needed)
-    // implementation(libs.gson)
-    // implementation(libs.retrofit)
-    // implementation(libs.retrofit.gson)
-    // implementation(libs.okhttp)
-    // implementation(libs.okhttp.logging)
-    // implementation(libs.okhttp.sse)
+    // Networking
+    implementation(libs.gson)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.okhttp.sse)
 
-    // Local storage (add back when needed)
-    // implementation(libs.room.runtime)
-    // implementation(libs.room.ktx)
-    // ksp(libs.room.compiler)
+    // Local storage
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // Markdown rendering
+    implementation(libs.compose.markdown)
 
     // Image loading (add back when needed)
     // implementation(libs.coil.compose)
@@ -117,4 +120,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.androidx.test.ext.junit)
     testImplementation(libs.arch.core.testing)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.room.testing)
 }

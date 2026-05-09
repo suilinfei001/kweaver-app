@@ -50,13 +50,12 @@ def appium_driver(request):
         options.set_capability("appActivity", "com.kweaver.dip.MainActivity")
         options.set_capability("noReset", False)
 
-    options.set_capability("unicodeKeyboard", True)
-    options.set_capability("resetKeyboard", True)
+    options.set_capability("unicodeKeyboard", False)
+    options.set_capability("resetKeyboard", False)
     options.set_capability("newCommandTimeout", 300)
     options.set_capability("uiautomator2ServerLaunchTimeout", 60000)
     options.set_capability("adbExecTimeout", 60000)
     options.set_capability("skipDeviceInitialization", True)
-    options.set_capability("disableSuppressAccessibilityService", True)
 
     driver = webdriver.Remote(appium_url, options=options)
 
