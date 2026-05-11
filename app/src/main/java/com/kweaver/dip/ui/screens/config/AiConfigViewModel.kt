@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,6 +36,8 @@ class AiConfigViewModel @Inject constructor(
     private val client: OkHttpClient,
     private val gson: Gson,
 ) : ViewModel() {
+
+    var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     private val _uiState = MutableStateFlow(AiConfigUiState())
     val uiState: StateFlow<AiConfigUiState> = _uiState.asStateFlow()
@@ -74,20 +77,22 @@ class AiConfigViewModel @Inject constructor(
         val state = _uiState.value
         val baseUrl = state.baseUrl.trimEnd('/')
         val apiKey = state.apiKey.trim()
-        if (baseUrl.isEmpty() || apiKey.isEmpty()) {
-            _uiState.value = state.copy(testError = "请填写 Base URL 和 API Key")
+        if (baseUrl.isEmpty()) {
+            _uiState.value = state.copy(testError = "请填写 Base URL")
             return
         }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isTesting = true, testSuccess = null, testError = null)
             try {
-                val result = withContext(Dispatchers.IO) {
-                    val request = Request.Builder()
+                val result = withContext(ioDispatcher) {
+                    val requestBuilder = Request.Builder()
                         .url("$baseUrl/models")
-                        .header("Authorization", "Bearer $apiKey")
                         .get()
-                        .build()
+                    if (apiKey.isNotEmpty()) {
+                        requestBuilder.header("Authorization", "Bearer $apiKey")
+                    }
+                    val request = requestBuilder.build()
                     val response = client.newCall(request).execute()
                     if (!response.isSuccessful) {
                         return@withContext "HTTP ${response.code}"

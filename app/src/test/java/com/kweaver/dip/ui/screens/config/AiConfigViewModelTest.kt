@@ -38,6 +38,7 @@ class AiConfigViewModelTest {
         server.start()
         whenever(repository.config).thenReturn(MutableStateFlow(null))
         viewModel = AiConfigViewModel(repository, OkHttpClient(), Gson())
+        viewModel.ioDispatcher = testDispatcher
     }
 
     @After
@@ -94,10 +95,25 @@ class AiConfigViewModelTest {
     }
 
     @Test
-    fun testConnectionValidatesEmptyFields() = runTest(testDispatcher) {
+    fun testConnectionValidatesEmptyBaseUrl() = runTest(testDispatcher) {
         viewModel.testConnection()
 
-        assertEquals("请填写 Base URL 和 API Key", viewModel.uiState.value.testError)
+        assertEquals("请填写 Base URL", viewModel.uiState.value.testError)
+    }
+
+    @Test
+    fun testConnectionWorksWithEmptyApiKey() = runTest(testDispatcher) {
+        server.enqueue(MockResponse().setBody(
+            """{"data":[{"id":"local-model"}]}"""
+        ))
+
+        viewModel.onBaseUrlChange(server.url("").toString().trimEnd('/'))
+        viewModel.onApiKeyChange("")
+        viewModel.testConnection()
+
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.testSuccess!!)
     }
 
     @Test

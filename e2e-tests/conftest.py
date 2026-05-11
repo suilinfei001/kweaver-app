@@ -23,6 +23,10 @@ def pytest_addoption(parser):
         help="Device name or UDID"
     )
     parser.addoption(
+        "--udid", action="store", default=None,
+        help="Device UDID (overrides device-name for udid capability)"
+    )
+    parser.addoption(
         "--appium-url", action="store", default="http://127.0.0.1:4723",
         help="Appium server URL"
     )
@@ -37,11 +41,17 @@ def appium_driver(request):
     app_path = request.config.getoption("--app-path")
     device_name = request.config.getoption("--device-name")
     appium_url = request.config.getoption("--appium-url")
+    udid = request.config.getoption("--udid")
 
     options = UiAutomator2Options()
     options.platform_name = "Android"
     options.device_name = device_name
     options.automation_name = "UiAutomator2"
+
+    if udid:
+        options.set_capability("udid", udid)
+    elif device_name:
+        options.set_capability("udid", device_name)
 
     if app_path:
         options.set_capability("app", app_path)
@@ -56,6 +66,10 @@ def appium_driver(request):
     options.set_capability("uiautomator2ServerLaunchTimeout", 60000)
     options.set_capability("adbExecTimeout", 60000)
     options.set_capability("skipDeviceInitialization", True)
+    options.set_capability("skipServerInstallation", True)
+    options.set_capability("settingsWatchdogInterval", 0)
+    options.set_capability("disableWindowAnimation", False)
+    options.set_capability("skipUnlock", True)
 
     driver = webdriver.Remote(appium_url, options=options)
 

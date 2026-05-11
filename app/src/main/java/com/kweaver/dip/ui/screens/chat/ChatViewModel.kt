@@ -1,5 +1,6 @@
 package com.kweaver.dip.ui.screens.chat
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.kweaver.dip.data.local.ConversationDao
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,6 +36,10 @@ class ChatViewModel @Inject constructor(
     private val aiConfigRepository: AiConfigRepository,
     private val conversationDao: ConversationDao,
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "ChatViewModel"
+    }
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
@@ -96,6 +102,11 @@ class ChatViewModel @Inject constructor(
             viewModelScope.launch {
                 val id = conversationDao.insert(ConversationEntity(title = text.take(50)))
                 _uiState.value = _uiState.value.copy(conversationId = id)
+                launch {
+                    chatRepository.getMessages(id).collect { messages ->
+                        _uiState.value = _uiState.value.copy(messages = messages)
+                    }
+                }
                 doSendMessage(config, id, text)
             }
         } else {
@@ -105,6 +116,11 @@ class ChatViewModel @Inject constructor(
 
     private fun doSendMessage(config: AiConfig, conversationId: Long, text: String) {
         viewModelScope.launch {
+            Log.d(TAG, "=== doSendMessage Start ===")
+            Log.d(TAG, "Config: baseUrl=${config.baseUrl}, model=${config.modelId}")
+            Log.d(TAG, "ConversationId: $conversationId")
+            Log.d(TAG, "User message: $text")
+
             _uiState.value = _uiState.value.copy(
                 inputText = "",
                 isStreaming = true,
@@ -114,30 +130,54 @@ class ChatViewModel @Inject constructor(
 
             val flow = chatRepository.sendMessage(config, conversationId, text)
 
-            // Collect streamed tokens
             val sb = StringBuilder()
+            var chunkCount = 0
             try {
+                Log.d(TAG, "Starting to collect SSE flow...")
                 flow.collect { chunk ->
                     sb.append(chunk)
+                    chunkCount++
+                    Log.v(TAG, "Chunk #$chunkCount received: '$chunk' (total length: ${sb.length})")
                     _uiState.value = _uiState.value.copy(streamingContent = sb.toString())
                 }
+                Log.d(TAG, "SSE flow completed. Total chunks: $chunkCount, total length: ${sb.length}")
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isStreaming = false,
-                    error = e.message ?: "发送失败",
-                )
+                Log.e(TAG, "SSE flow error: ${e.message}", e)
+                Log.d(TAG, "Falling back to non-streaming request...")
+                try {
+                    val response = chatRepository.sendNonStreaming(config, conversationId, text)
+                    Log.d(TAG, "Non-streaming response received, length: ${response.length}")
+                    if (response.isNotEmpty()) {
+                        chatRepository.saveAssistantMessage(conversationId, response)
+                    }
+                    val latestMessages = chatRepository.getMessages(conversationId).first()
+                    _uiState.value = _uiState.value.copy(
+                        isStreaming = false,
+                        streamingContent = "",
+                        messages = latestMessages,
+                    )
+                } catch (e2: Exception) {
+                    Log.e(TAG, "Non-streaming also failed: ${e2.message}", e2)
+                    _uiState.value = _uiState.value.copy(
+                        isStreaming = false,
+                        error = e2.message ?: "发送失败",
+                    )
+                }
                 return@launch
             }
 
-            // Save full assistant response
             val fullResponse = sb.toString()
+            Log.d(TAG, "Saving assistant message, length: ${fullResponse.length}")
             if (fullResponse.isNotEmpty()) {
                 chatRepository.saveAssistantMessage(conversationId, fullResponse)
             }
 
+            val latestMessages = chatRepository.getMessages(conversationId).first()
+            Log.d(TAG, "=== doSendMessage Complete ===")
             _uiState.value = _uiState.value.copy(
                 isStreaming = false,
                 streamingContent = "",
+                messages = latestMessages,
             )
         }
     }

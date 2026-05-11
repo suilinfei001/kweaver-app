@@ -19,3 +19,4 @@ e2e-tests/.pytest_cache/
 
 # Signing keystore
 *.jks
+.kotlin
