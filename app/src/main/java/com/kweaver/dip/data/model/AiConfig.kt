@@ -5,4 +5,6 @@ data class AiConfig(
     val modelId: String,
     val contextSize: Int = 4096,
     val apiKey: String,
+    val asrUrl: String = "",
+    val asrEnabled: Boolean = false,
 )

@@ -17,11 +17,13 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -113,6 +115,38 @@ fun AiConfigScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "语音识别配置",
+            style = MaterialTheme.typography.titleMedium,
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text("启用远程 ASR")
+            Switch(
+                checked = uiState.asrEnabled,
+                onCheckedChange = viewModel::onAsrEnabledChange,
+            )
+        }
+
+        if (uiState.asrEnabled) {
+            OutlinedTextField(
+                value = uiState.asrUrl,
+                onValueChange = viewModel::onAsrUrlChange,
+                label = { Text("ASR 服务地址") },
+                placeholder = { Text("http://xxx:8348/asr") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         Spacer(modifier = Modifier.height(8.dp))
 

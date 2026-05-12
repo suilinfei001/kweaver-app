@@ -108,6 +108,9 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
 
+    // ONNX Runtime for ASR (removed - using remote ASR service)
+    // implementation(libs.onnxruntime.android)
+
     // Instrumented test dependencies
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.hilt.android.testing)

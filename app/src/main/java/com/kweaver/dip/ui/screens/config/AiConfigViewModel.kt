@@ -23,6 +23,8 @@ data class AiConfigUiState(
     val modelId: String = "",
     val apiKey: String = "",
     val contextSize: String = "4096",
+    val asrUrl: String = "",
+    val asrEnabled: Boolean = false,
     val isTesting: Boolean = false,
     val testSuccess: Boolean? = null,
     val testError: String? = null,
@@ -51,6 +53,8 @@ class AiConfigViewModel @Inject constructor(
                         modelId = config.modelId,
                         apiKey = config.apiKey,
                         contextSize = config.contextSize.toString(),
+                        asrUrl = config.asrUrl,
+                        asrEnabled = config.asrEnabled,
                     )
                 }
             }
@@ -71,6 +75,14 @@ class AiConfigViewModel @Inject constructor(
 
     fun onContextSizeChange(value: String) {
         _uiState.value = _uiState.value.copy(contextSize = value, testSuccess = null, testError = null)
+    }
+
+    fun onAsrUrlChange(value: String) {
+        _uiState.value = _uiState.value.copy(asrUrl = value)
+    }
+
+    fun onAsrEnabledChange(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(asrEnabled = enabled)
     }
 
     fun testConnection() {
@@ -119,6 +131,8 @@ class AiConfigViewModel @Inject constructor(
             modelId = state.modelId.trim(),
             apiKey = state.apiKey.trim(),
             contextSize = state.contextSize.toIntOrNull() ?: 4096,
+            asrUrl = state.asrUrl.trim(),
+            asrEnabled = state.asrEnabled,
         )
 
         viewModelScope.launch {

@@ -25,9 +25,11 @@ data class ChatUiState(
     val inputText: String = "",
     val streamingContent: String = "",
     val isStreaming: Boolean = false,
+    val isRecording: Boolean = false,
     val error: String? = null,
     val conversationId: Long = 0,
     val conversations: List<ConversationEntity> = emptyList(),
+    val config: AiConfig = AiConfig("", "", 4096, ""),
 )
 
 @HiltViewModel
@@ -50,6 +52,7 @@ class ChatViewModel @Inject constructor(
         viewModelScope.launch {
             aiConfigRepository.config.collect { config ->
                 currentConfig = config
+                _uiState.value = _uiState.value.copy(config = config ?: AiConfig("", "", 4096, ""))
             }
         }
         viewModelScope.launch {
@@ -184,5 +187,29 @@ class ChatViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun startRecording() {
+        _uiState.value = _uiState.value.copy(isRecording = true)
+    }
+
+    fun stopRecording() {
+        _uiState.value = _uiState.value.copy(isRecording = false)
+    }
+
+    fun onSpeechResult(text: String) {
+        if (text.isNotBlank()) {
+            _uiState.value = _uiState.value.copy(
+                inputText = _uiState.value.inputText + text,
+                isRecording = false,
+            )
+            sendMessage()
+        } else {
+            _uiState.value = _uiState.value.copy(isRecording = false)
+        }
+    }
+
+    fun onShortPress() {
+        _uiState.value = _uiState.value.copy(error = "请按住按钮说话")
     }
 }
