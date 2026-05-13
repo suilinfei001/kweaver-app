@@ -7,4 +7,6 @@ data class AiConfig(
     val apiKey: String,
     val asrUrl: String = "",
     val asrEnabled: Boolean = false,
+    val ttsUrl: String = "",
+    val ttsEnabled: Boolean = false,
 )

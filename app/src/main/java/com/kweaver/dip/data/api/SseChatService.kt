@@ -54,8 +54,8 @@ class SseChatService @Inject constructor(
 
         val requestBuilder = Request.Builder()
             .url(url)
-            .header("Content-Type", "application/json")
-            .header("Accept", "text/event-stream")
+            .header("Content-Type", "application/json; charset=utf-8")
+            .header("Accept", "text/event-stream; charset=utf-8")
         if (apiKey.isNotEmpty()) {
             requestBuilder.header("Authorization", "Bearer $apiKey")
         }

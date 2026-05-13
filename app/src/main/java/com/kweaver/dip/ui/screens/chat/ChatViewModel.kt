@@ -3,12 +3,14 @@ package com.kweaver.dip.ui.screens.chat
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kweaver.dip.data.api.TtsRemoteService
 import com.kweaver.dip.data.local.ConversationDao
 import com.kweaver.dip.data.model.AiConfig
 import com.kweaver.dip.data.model.ConversationEntity
 import com.kweaver.dip.data.model.MessageEntity
 import com.kweaver.dip.data.repository.AiConfigRepository
 import com.kweaver.dip.data.repository.ChatRepository
+import com.kweaver.dip.data.tts.TtsPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,6 +28,7 @@ data class ChatUiState(
     val streamingContent: String = "",
     val isStreaming: Boolean = false,
     val isRecording: Boolean = false,
+    val isTtsPlaying: Boolean = false,
     val error: String? = null,
     val conversationId: Long = 0,
     val conversations: List<ConversationEntity> = emptyList(),
@@ -37,6 +40,7 @@ class ChatViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
     private val aiConfigRepository: AiConfigRepository,
     private val conversationDao: ConversationDao,
+    private val ttsRemoteService: TtsRemoteService,
 ) : ViewModel() {
 
     companion object {
@@ -48,17 +52,32 @@ class ChatViewModel @Inject constructor(
 
     private var currentConfig: AiConfig? = null
 
+    private val ttsPlayer = TtsPlayer(ttsRemoteService, viewModelScope)
+
     init {
         viewModelScope.launch {
             aiConfigRepository.config.collect { config ->
                 currentConfig = config
                 _uiState.value = _uiState.value.copy(config = config ?: AiConfig("", "", 4096, ""))
+
+                config?.ttsUrl?.let { url ->
+                    if (url.isNotBlank()) {
+                        ttsRemoteService.configure(url)
+                    }
+                }
             }
         }
         viewModelScope.launch {
             conversationDao.getAll().collect { conversations ->
                 _uiState.value = _uiState.value.copy(conversations = conversations)
             }
+        }
+
+        ttsPlayer.onPlaybackStart = {
+            _uiState.value = _uiState.value.copy(isTtsPlaying = true)
+        }
+        ttsPlayer.onPlaybackEnd = {
+            _uiState.value = _uiState.value.copy(isTtsPlaying = false)
         }
     }
 
@@ -142,7 +161,16 @@ class ChatViewModel @Inject constructor(
                     chunkCount++
                     Log.v(TAG, "Chunk #$chunkCount received: '$chunk' (total length: ${sb.length})")
                     _uiState.value = _uiState.value.copy(streamingContent = sb.toString())
+
+                    if (currentConfig?.ttsEnabled == true && chunk.isNotBlank()) {
+                        ttsPlayer.onNewToken(chunk)
+                    }
                 }
+
+                if (currentConfig?.ttsEnabled == true) {
+                    ttsPlayer.flush()
+                }
+
                 Log.d(TAG, "SSE flow completed. Total chunks: $chunkCount, total length: ${sb.length}")
             } catch (e: Exception) {
                 Log.e(TAG, "SSE flow error: ${e.message}", e)
@@ -207,6 +235,15 @@ class ChatViewModel @Inject constructor(
         } else {
             _uiState.value = _uiState.value.copy(isRecording = false)
         }
+    }
+
+    fun stopTts() {
+        ttsPlayer.stop()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        ttsPlayer.stop()
     }
 
     fun onShortPress() {

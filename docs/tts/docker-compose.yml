@@ -1,0 +1,17 @@
+services:
+  tts:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sherpa-onnx-tts
+    ports:
+      - "${TTS_PORT:-8349}:8080"
+    volumes:
+      - ../../backend/models:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped

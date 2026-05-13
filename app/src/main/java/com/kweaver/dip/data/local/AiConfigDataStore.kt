@@ -23,6 +23,11 @@ class AiConfigDataStore @Inject constructor(
         val API_KEY = stringPreferencesKey("api_key")
         val ASR_URL = stringPreferencesKey("asr_url")
         val ASR_ENABLED = booleanPreferencesKey("asr_enabled")
+        val TTS_URL = stringPreferencesKey("tts_url")
+        val TTS_ENABLED = booleanPreferencesKey("tts_enabled")
+        val AI_VALIDATED = booleanPreferencesKey("ai_validated")
+        val ASR_VALIDATED = booleanPreferencesKey("asr_validated")
+        val TTS_VALIDATED = booleanPreferencesKey("tts_validated")
     }
 
     val config: Flow<AiConfig?> = dataStore.data.map { prefs ->
@@ -37,10 +42,39 @@ class AiConfigDataStore @Inject constructor(
                 apiKey = apiKey,
                 asrUrl = prefs[ASR_URL] ?: "",
                 asrEnabled = prefs[ASR_ENABLED] ?: false,
+                ttsUrl = prefs[TTS_URL] ?: "",
+                ttsEnabled = prefs[TTS_ENABLED] ?: false,
             )
         } else {
             null
         }
+    }
+
+    val hasConfig: Flow<Boolean> = config.map { it != null }
+
+    val isAiValidated: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[AI_VALIDATED] ?: false
+    }
+
+    val isAsrValidated: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[ASR_VALIDATED] ?: false
+    }
+
+    val isTtsValidated: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[TTS_VALIDATED] ?: false
+    }
+
+    val isConfigFullyValidated: Flow<Boolean> = dataStore.data.map { prefs ->
+        val aiValidated = prefs[AI_VALIDATED] ?: false
+        val asrEnabled = prefs[ASR_ENABLED] ?: false
+        val asrValidated = prefs[ASR_VALIDATED] ?: false
+        val ttsEnabled = prefs[TTS_ENABLED] ?: false
+        val ttsValidated = prefs[TTS_VALIDATED] ?: false
+
+        if (!aiValidated) return@map false
+        if (asrEnabled && !asrValidated) return@map false
+        if (ttsEnabled && !ttsValidated) return@map false
+        true
     }
 
     suspend fun saveConfig(config: AiConfig) {
@@ -51,8 +85,26 @@ class AiConfigDataStore @Inject constructor(
             prefs[API_KEY] = config.apiKey
             prefs[ASR_URL] = config.asrUrl
             prefs[ASR_ENABLED] = config.asrEnabled
+            prefs[TTS_URL] = config.ttsUrl
+            prefs[TTS_ENABLED] = config.ttsEnabled
         }
     }
 
-    val hasConfig: Flow<Boolean> = config.map { it != null }
+    suspend fun setAiValidated(validated: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[AI_VALIDATED] = validated
+        }
+    }
+
+    suspend fun setAsrValidated(validated: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[ASR_VALIDATED] = validated
+        }
+    }
+
+    suspend fun setTtsValidated(validated: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[TTS_VALIDATED] = validated
+        }
+    }
 }

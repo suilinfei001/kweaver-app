@@ -12,6 +12,10 @@ class AiConfigRepository @Inject constructor(
 ) {
     val config: Flow<AiConfig?> = dataStore.config
     val hasConfig: Flow<Boolean> = dataStore.hasConfig
+    val isConfigFullyValidated: Flow<Boolean> = dataStore.isConfigFullyValidated
 
     suspend fun saveConfig(config: AiConfig) = dataStore.saveConfig(config)
+    suspend fun setAiValidated(validated: Boolean) = dataStore.setAiValidated(validated)
+    suspend fun setAsrValidated(validated: Boolean) = dataStore.setAsrValidated(validated)
+    suspend fun setTtsValidated(validated: Boolean) = dataStore.setTtsValidated(validated)
 }

@@ -1,28 +1,20 @@
 package com.kweaver.dip.ui.screens.chat
 
 import android.Manifest
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,26 +22,28 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -61,8 +55,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -70,16 +68,13 @@ import com.kweaver.dip.data.api.AsrRemoteService
 import com.kweaver.dip.ui.components.MessageBubble
 import com.kweaver.dip.ui.components.StreamingBubble
 import kotlinx.coroutines.Job
-import okhttp3.OkHttpClient
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.io.File
+import okhttp3.OkHttpClient
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    onNavigateToSettings: () -> Unit,
     viewModel: ChatViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -96,9 +91,8 @@ fun ChatScreen(
     val voiceRecognizer = remember { VoiceRecognitionManager(asrRemoteService) }
 
     var recordingJob by remember { mutableStateOf<Job?>(null) }
-    val recognizedText by voiceRecognizer.recognizedText.collectAsState()
     val isRecording by voiceRecognizer.isRecording.collectAsState()
-    val isRecognizing by voiceRecognizer.isRecognizing.collectAsState()
+    var showHint by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -141,19 +135,19 @@ fun ChatScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("AI 对话") },
+                title = { Text("AI 对话", style = MaterialTheme.typography.titleLarge) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                ),
                 actions = {
                     IconButton(onClick = viewModel::newConversation) {
                         Icon(Icons.Default.Add, contentDescription = "新对话")
-                    }
-                    DebugVariantButton()
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "设置")
                     }
                 },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.surface,
     ) { padding ->
         Column(
             modifier = Modifier
@@ -166,7 +160,7 @@ fun ChatScreen(
                     .weight(1f)
                     .fillMaxWidth(),
                 state = listState,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = padding,
             ) {
                 items(
@@ -184,215 +178,246 @@ fun ChatScreen(
             }
 
             if (isVoiceMode) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "相机",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-
-                    var showHint by remember { mutableStateOf(false) }
-                    var pressStartTime by remember { mutableStateOf(0L) }
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp)
-                            .background(
-                                color = if (isRecording)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.error,
-                                shape = RoundedCornerShape(24.dp),
-                            )
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onPress = {
-                                        Log.d("ChatScreen", "=== onPress started ===")
-                                        if (!hasRecordPermission) {
-                                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                            tryAwaitRelease()
-                                            return@detectTapGestures
-                                        }
-
-                                        if (!uiState.config.asrEnabled || uiState.config.asrUrl.isBlank()) {
-                                            scope.launch {
-                                                snackbarHostState.showSnackbar("请先在设置中配置 ASR 服务")
-                                            }
-                                            tryAwaitRelease()
-                                            return@detectTapGestures
-                                        }
-
-                                        pressStartTime = System.currentTimeMillis()
-                                        showHint = false
-
-                                        val hintJob = scope.launch {
-                                            delay(1000)
-                                            showHint = true
-                                        }
-
-                                        voiceRecognizer.startRecording()
-                                        recordingJob = scope.launch {
-                                            audioCapturer.startRecording().collect { audioChunk ->
-                                                voiceRecognizer.processAudioChunk(audioChunk)
-                                            }
-                                        }
-
-                                        tryAwaitRelease()
-                                        hintJob.cancel()
-
-                                        val pressDuration = System.currentTimeMillis() - pressStartTime
-                                        Log.d("ChatScreen", "=== onPress ended, duration: $pressDuration ===")
-
-                                        if (pressDuration < 500) {
-                                            showHint = false
-                                        }
-
-                                        recordingJob?.cancel()
-                                        voiceRecognizer.stopRecording()
-
-                                        scope.launch {
-                                            val result = voiceRecognizer.recognize()
-                                            result.onSuccess { finalText ->
-                                                Log.d("ChatScreen", "=== recognized text: $finalText ===")
-                                                if (finalText.isNotBlank()) {
-                                                    viewModel.onSpeechResult(finalText)
-                                                } else {
-                                                    snackbarHostState.showSnackbar("未识别到文字，请重试")
-                                                }
-                                            }.onFailure { e ->
-                                                Log.e("ChatScreen", "=== ASR error: ${e.message} ===")
-                                                snackbarHostState.showSnackbar("识别失败: ${e.message}")
-                                            }
-                                            voiceRecognizer.clearBuffer()
-                                        }
-                                    },
-                                )
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = when {
-                                isRecording -> "识别中..."
-                                showHint -> "请长按按钮开始说话"
-                                else -> "按住说话"
-                            },
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onError,
-                        )
-                    }
-
-                    IconButton(onClick = { isVoiceMode = false }) {
-                        Icon(
-                            imageVector = Icons.Default.Keyboard,
-                            contentDescription = "键盘",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "添加",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
+                VoiceInputBar(
+                    isRecording = isRecording,
+                    showHint = showHint,
+                    onShowHintChange = { showHint = it },
+                    onPressStart = {
+                        if (!hasRecordPermission) {
+                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            return@VoiceInputBar
+                        }
+                        if (!uiState.config.asrEnabled || uiState.config.asrUrl.isBlank()) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("请先在设置中配置 ASR 服务")
+                            }
+                            return@VoiceInputBar
+                        }
+                        voiceRecognizer.startRecording()
+                        recordingJob = scope.launch {
+                            audioCapturer.startRecording().collect { audioChunk ->
+                                voiceRecognizer.processAudioChunk(audioChunk)
+                            }
+                        }
+                    },
+                    onPressEnd = { duration ->
+                        recordingJob?.cancel()
+                        voiceRecognizer.stopRecording()
+                        if (duration < 500) {
+                            showHint = false
+                            return@VoiceInputBar
+                        }
+                        scope.launch {
+                            val result = voiceRecognizer.recognize()
+                            result.onSuccess { finalText ->
+                                if (finalText.isNotBlank()) {
+                                    viewModel.onSpeechResult(finalText)
+                                } else {
+                                    snackbarHostState.showSnackbar("未识别到文字，请重试")
+                                }
+                            }.onFailure { e ->
+                                snackbarHostState.showSnackbar("识别失败: ${e.message}")
+                            }
+                            voiceRecognizer.clearBuffer()
+                        }
+                    },
+                    onSwitchToKeyboard = { isVoiceMode = false },
+                    modifier = Modifier.padding(16.dp),
+                )
             } else {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedTextField(
-                        value = uiState.inputText,
-                        onValueChange = viewModel::onInputChange,
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("输入消息...") },
-                        maxLines = 4,
-                        enabled = !uiState.isStreaming,
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    IconButton(
-                        onClick = { isVoiceMode = true },
-                        enabled = !uiState.isStreaming,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = "语音输入",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    IconButton(
-                        onClick = viewModel::sendMessage,
-                        enabled = uiState.inputText.isNotBlank() && !uiState.isStreaming,
-                    ) {
-                        Text(
-                            text = "发送",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (uiState.inputText.isNotBlank() && !uiState.isStreaming)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                        )
-                    }
-                }
+                TextInputBar(
+                    inputText = uiState.inputText,
+                    onInputChange = viewModel::onInputChange,
+                    onSend = viewModel::sendMessage,
+                    onSwitchToVoice = { isVoiceMode = true },
+                    onCameraClick = {},
+                    isStreaming = uiState.isStreaming,
+                    modifier = Modifier.padding(16.dp),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun DebugVariantButton() {
-    var showMenu by remember { mutableStateOf(false) }
-    var currentVariant by remember { mutableStateOf(0) }
-    val variants = listOf("原版", "A - 极简", "B - 卡片", "C - 沉浸")
+fun VoiceInputBar(
+    isRecording: Boolean,
+    showHint: Boolean,
+    onShowHintChange: (Boolean) -> Unit,
+    onPressStart: () -> Unit,
+    onPressEnd: (Long) -> Unit,
+    onSwitchToKeyboard: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scope = rememberCoroutineScope()
+    var pressStartTime by remember { mutableStateOf(0L) }
 
-    Box {
-        IconButton(onClick = { showMenu = true }) {
-            Text(
-                text = "D${currentVariant + 1}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+    val buttonScale by animateFloatAsState(
+        targetValue = if (isRecording) 1.1f else 1f,
+        animationSpec = tween(300),
+        label = "scale"
+    )
 
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
+    val buttonColor by animateColorAsState(
+        targetValue = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+        animationSpec = tween(300),
+        label = "color"
+    )
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        shadowElevation = 8.dp,
+        color = MaterialTheme.colorScheme.surface,
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = "设计风格切换",
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            HorizontalDivider()
-            variants.forEachIndexed { index, name ->
-                DropdownMenuItem(
-                    text = { Text(name) },
-                    onClick = {
-                        currentVariant = index
-                        showMenu = false
-                    },
-                    leadingIcon = {
-                        if (currentVariant == index) {
-                            Text("✓", color = MaterialTheme.colorScheme.primary)
-                        }
+            IconButton(onClick = onSwitchToKeyboard) {
+                Icon(
+                    Icons.Default.Keyboard,
+                    contentDescription = "键盘模式",
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(24.dp))
+
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(80.dp)
+                    .scale(buttonScale)
+                    .shadow(if (isRecording) 12.dp else 4.dp, CircleShape)
+                    .background(buttonColor, CircleShape)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onPress = {
+                                pressStartTime = System.currentTimeMillis()
+                                onShowHintChange(false)
+
+                                val hintJob = scope.launch {
+                                    delay(1000)
+                                    onShowHintChange(true)
+                                }
+
+                                onPressStart()
+                                tryAwaitRelease()
+                                hintJob.cancel()
+
+                                val duration = System.currentTimeMillis() - pressStartTime
+                                onPressEnd(duration)
+                            }
+                        )
                     }
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Default.Mic,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp),
+                    )
+                    Text(
+                        text = when {
+                            isRecording -> "录音中"
+                            showHint -> "请长按说话"
+                            else -> "按住"
+                        },
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(24.dp))
+
+            Box(modifier = Modifier.size(48.dp))
+        }
+    }
+}
+
+@Composable
+fun TextInputBar(
+    inputText: String,
+    onInputChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onSwitchToVoice: () -> Unit,
+    onCameraClick: () -> Unit,
+    isStreaming: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        shadowElevation = 8.dp,
+        color = MaterialTheme.colorScheme.surface,
+    ) {
+        Row(
+            modifier = Modifier.padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            OutlinedTextField(
+                value = inputText,
+                onValueChange = onInputChange,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
+                placeholder = { Text("输入消息...") },
+                maxLines = 4,
+                enabled = !isStreaming,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                ),
+            )
+
+            FloatingActionButton(
+                onClick = onCameraClick,
+                modifier = Modifier.size(44.dp),
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ) {
+                Icon(
+                    Icons.Default.CameraAlt,
+                    contentDescription = "拍照",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            FloatingActionButton(
+                onClick = onSwitchToVoice,
+                modifier = Modifier.size(44.dp),
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            ) {
+                Icon(
+                    Icons.Default.Mic,
+                    contentDescription = "语音输入",
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            FloatingActionButton(
+                onClick = onSend,
+                modifier = Modifier.size(44.dp),
+                containerColor = if (inputText.isNotBlank() && !isStreaming)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.surfaceVariant,
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "发送",
+                    tint = if (inputText.isNotBlank() && !isStreaming)
+                        MaterialTheme.colorScheme.onPrimary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

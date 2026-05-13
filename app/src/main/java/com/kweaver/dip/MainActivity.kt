@@ -24,7 +24,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             KWeaverDIPTheme {
                 val hasConfig by aiConfigRepository.hasConfig.collectAsState(initial = false)
-                AppNavigation(hasConfig = hasConfig)
+                val isConfigFullyValidated by aiConfigRepository.isConfigFullyValidated.collectAsState(initial = false)
+                AppNavigation(
+                    hasConfig = hasConfig,
+                    isConfigFullyValidated = isConfigFullyValidated,
+                )
             }
         }
     }
